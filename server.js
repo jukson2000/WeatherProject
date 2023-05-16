@@ -1,5 +1,7 @@
 const express = require("express");
 const axios = require("axios");
+const NodeCache = require("node-cache");
+const myCache = new NodeCache({ checkperiod: 1000 });
 
 const app = express();
 
@@ -22,20 +24,44 @@ app.get("/weather/current", async (req, res) => {
   }
 
   try {
-    const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}`
-    );
-    const temperature = response.data.main.temp;
-    const description = response.data.weather[0].description;
-    const windSpeed = response.data.wind.speed;
-    const windDirection = response.data.wind.deg;
+    let cach = myCache.get("current");
 
-    return res.json({
-      temperature,
-      description,
-      windSpeed,
-      windDirection,
-    });
+    if (cach !== undefined && cach.name === city) {
+      const data = cach;
+      const temperature = data.main.temp;
+      const description = data.weather[0].description;
+      const windSpeed = data.wind.speed;
+      const windDirection = data.wind.deg;
+
+      console.log("Cach");
+      return res.json({
+        temperature,
+        description,
+        windSpeed,
+        windDirection,
+      });
+    } else {
+      const response = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}`
+      );
+
+      const data = response.data;
+      cach = myCache.set("current", data, 1000);
+      cach = myCache.get("current");
+
+      const temperature = data.main.temp;
+      const description = data.weather[0].description;
+      const windSpeed = data.wind.speed;
+      const windDirection = data.wind.deg;
+
+      console.log("API ");
+      return res.json({
+        temperature,
+        description,
+        windSpeed,
+        windDirection,
+      });
+    }
   } catch (error) {
     if (error.response.status === 404) {
       res.send("City not found! Please try again!");
@@ -55,28 +81,57 @@ app.get("/weather/forecast", async function (req, res) {
   }
 
   try {
-    const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${API_KEY}`
-    );
+    let cach = myCache.get("forecast");
 
-    const weather = [];
-    for (let i = 0; i < response.data.list.length - 1; i += 8) {
-      const temperature = response.data.list[i].main.temp;
-      const description = response.data.list[i].weather[0].description;
-      const windSpeed = response.data.list[i].wind.speed;
-      const windDirection = response.data.list[i].wind.deg;
-      const date = response.data.list[i].dt_txt;
+    if (cach !== undefined && cach.city.name === city) {
+      const weather = [];
+      const data = cach;
+      for (let i = 0; i < data.list.length - 1; i += 8) {
+        const temperature = data.list[i].main.temp;
+        const description = data.list[i].weather[0].description;
+        const windSpeed = data.list[i].wind.speed;
+        const windDirection = data.list[i].wind.deg;
+        const date = data.list[i].dt_txt;
 
-      weather.push({
-        temperature,
-        description,
-        windSpeed,
-        windDirection,
-        date,
-      });
+        weather.push({
+          temperature,
+          description,
+          windSpeed,
+          windDirection,
+          date,
+        });
+      }
+      console.log("Cach");
+      res.send(weather);
+    } else {
+      const response = await axios.get(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${API_KEY}`
+      );
+
+      const data = response.data;
+      cach = myCache.set("forecast", data, 1000);
+      cach = myCache.get("forecast");
+      console.log(cach.city.name);
+
+      const weather = [];
+      for (let i = 0; i < data.list.length - 1; i += 8) {
+        const temperature = data.list[i].main.temp;
+        const description = data.list[i].weather[0].description;
+        const windSpeed = data.list[i].wind.speed;
+        const windDirection = data.list[i].wind.deg;
+        const date = data.list[i].dt_txt;
+
+        weather.push({
+          temperature,
+          description,
+          windSpeed,
+          windDirection,
+          date,
+        });
+      }
+      console.log("API");
+      return res.send(weather);
     }
-
-    return res.send(weather);
   } catch (error) {
     if (error.response.status === 404) {
       res.send("City not found! Please try again!");
@@ -87,6 +142,8 @@ app.get("/weather/forecast", async function (req, res) {
     }
   }
 });
+
+let cityID = 0;
 
 app.get("/weather/history", async (req, res) => {
   const city = req.query.city;
@@ -102,28 +159,57 @@ app.get("/weather/history", async (req, res) => {
   }
 
   try {
-    const response = await axios.get(
-      `https://history.openweathermap.org/data/2.5/history/city?q=${city}&type=hour&units=metric&start=${startDate}&end=${endDate}&appid=${API_KEY}`
-    );
+    let cach = myCache.get("history");
 
-    const weather = [];
-    for (let i = 0; i < response.data.list.length - 1; i += 8) {
-      const temperature = response.data.list[i].main.temp;
-      const description = response.data.list[i].weather[0].description;
-      const windSpeed = response.data.list[i].wind.speed;
-      const windDirection = response.data.list[i].wind.deg;
-      const date = response.data.list[i].dt_txt;
+    if (cach !== undefined && cach.city_id === cityID) {
+      const weather = [];
+      const data = cach;
+      for (let i = 0; i < data.list.length - 1; i += 8) {
+        const temperature = data.list[i].main.temp;
+        const description = data.list[i].weather[0].description;
+        const windSpeed = data.list[i].wind.speed;
+        const windDirection = data.list[i].wind.deg;
+        const date = data.list[i].dt_txt;
 
-      weather.push({
-        temperature,
-        description,
-        windSpeed,
-        windDirection,
-        date,
-      });
+        weather.push({
+          temperature,
+          description,
+          windSpeed,
+          windDirection,
+          date,
+        });
+      }
+      console.log("Cach");
+      res.send(weather);
+    } else {
+      const response = await axios.get(
+        `https://history.openweathermap.org/data/2.5/history/city?q=${city}&type=hour&units=metric&start=${startDate}&end=${endDate}&appid=${API_KEY}`
+      );
+
+      const data = response.data;
+      cach = myCache.set("history", data, 1000);
+      cach = myCache.get("history");
+      cityID = cach.city_id;
+
+      const weather = [];
+      for (let i = 0; i < response.data.list.length - 1; i += 8) {
+        const temperature = response.data.list[i].main.temp;
+        const description = response.data.list[i].weather[0].description;
+        const windSpeed = response.data.list[i].wind.speed;
+        const windDirection = response.data.list[i].wind.deg;
+        const date = response.data.list[i].dt_txt;
+
+        weather.push({
+          temperature,
+          description,
+          windSpeed,
+          windDirection,
+          date,
+        });
+      }
+      console.log("API");
+      res.send(weather);
     }
-
-    res.send(weather);
   } catch (error) {
     console.log(error.response);
     if (error.response.status === 404) {
