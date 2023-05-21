@@ -1,0 +1,246 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Swagger Documentation NODE JS API",
+    "version": "1.0.0",
+    "title": "Restful API Documentation",
+    "contact": {
+      "email": "jusuf@mail.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "schemes": ["http"],
+  "host": "localhost:3000",
+  "basePath": "/weather",
+  "paths": {
+    "/current": {
+      "get": {
+        "summary": "Wheather now",
+        "description": "Get present wheater for specifi city",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "cityName",
+            "in": "query",
+            "description": "City",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Executed,wheather is:",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/currentResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Incorrect city name",
+            "schema": {
+              "$ref": "#/definitions/IncorrectResponse"
+            }
+          }
+        }
+      }
+    },
+    "/forecast": {
+      "get": {
+        "summary": "Forecast for specific city",
+        "description": "Showin ",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "cityName",
+            "in": "query",
+            "description": "City for displaying wheather",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful request, wheather forecast displayes",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/forecastFetcher"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data",
+            "schema": {
+              "$ref": "#/definitions/InvalidRequest"
+            }
+          }
+        }
+      }
+    },
+    "/history": {
+      "get": {
+        "summary": "Weather history",
+        "description": "Wheather between input dates",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "cityName",
+            "in": "query",
+            "description": "City",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "startDate",
+            "description": "Beginning date of the time period",
+            "required": true,
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "in": "query",
+            "name": "endDate",
+            "description": "End of the selected time period",
+            "required": true,
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful functioning; display of historical weather information",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/historyAnswers"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data",
+            "schema": {
+              "$ref": "#/definitions/InvalidAnswers"
+            }
+          }
+        }
+      }
+    },
+    "/auth": {
+      "get": {
+        "summary": "Authenticate user with",
+        "description": "User verification through email and password",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "description": "email",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "query",
+            "description": "password",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "You are authenticated",
+            "schema": {
+              "message": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data",
+            "schema": {
+              "$ref": "#/definitions/InvalidAnswers"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "currentAnswer": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "temperature": {
+          "type": "number"
+        },
+        "humidity": {
+          "type": "integer"
+        }
+      }
+    },
+    "forecastAnswer": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "temperature": {
+          "type": "number"
+        },
+        "humidity": {
+          "type": "integer"
+        }
+      }
+    },
+    "historyAnswer": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "temperature": {
+          "type": "number"
+        },
+        "humidity": {
+          "type": "integer"
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "InvalidAnswers": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
